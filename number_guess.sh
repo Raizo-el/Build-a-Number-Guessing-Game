@@ -4,29 +4,32 @@ PSQL="psql --username=freecodecamp --dbname=number_guess -t --no-align -c"
 SECRET=$(( RANDOM % 1000 + 1 ))
 
 echo "Enter your username:"
-read -r USERNAME
-USERNAME=$(printf '%s' "$USERNAME" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-USERNAME="${USERNAME:0:22}"
-USERNAME_ESC=$(printf '%s' "$USERNAME" | sed "s/'/''/g")
+read -r INPUT_NAME
+INPUT_NAME=$(printf '%s' "$INPUT_NAME" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+INPUT_NAME="${INPUT_NAME:0:22}"
+INPUT_ESC=$(printf '%s' "$INPUT_NAME" | sed "s/'/''/g")
 
-USER_DATA="$($PSQL "SELECT username, games_played, COALESCE(best_game::text, '0') FROM users WHERE username = '$USERNAME_ESC';" 2>/dev/null)"
-USER_DATA_TRIM=$(printf '%s' "$USER_DATA" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+USER_DATA="$($PSQL "SELECT username, games_played, COALESCE(best_game::text, '0') FROM users WHERE username = '$INPUT_ESC';" 2>/dev/null)"
+USER_DATA_TRIM=$(printf '%s' "$USER_DATA" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 
 if [[ -z "$USER_DATA_TRIM" ]]; then
-  echo "Welcome, $USERNAME! It looks like this is your first time here."
-  $PSQL "INSERT INTO users(username, games_played, best_game) VALUES('$USERNAME_ESC', 0, NULL);" >/dev/null 2>&1
+  echo "Welcome, $INPUT_NAME! It looks like this is your first time here."
+  $PSQL "INSERT INTO users(username, games_played, best_game) VALUES('$INPUT_ESC', 0, NULL);" >/dev/null 2>&1
+  USERNAME_ESC=$INPUT_ESC
 else
-  IFS='|' read -r DB_USERNAME GAMES_PLAYED BEST_GAME <<< "$USER_DATA_TRIM"
-  DB_USERNAME=$(printf '%s' "$DB_USERNAME" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-  GAMES_PLAYED=$(printf '%s' "$GAMES_PLAYED" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-  BEST_GAME=$(printf '%s' "$BEST_GAME" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-  echo "Welcome back, $DB_USERNAME! You have played $GAMES_PLAYED games, and your best game took $BEST_GAME guesses."
+  IFS='|' read -r USERNAME GAMES_PLAYED BEST_GAME <<< "$USER_DATA_TRIM"
+  USERNAME=$(printf '%s' "$USERNAME" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+  GAMES_PLAYED=$(printf '%s' "$GAMES_PLAYED" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+  BEST_GAME=$(printf '%s' "$BEST_GAME" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+  echo "Welcome back, $USERNAME! You have played $GAMES_PLAYED games, and your best game took $BEST_GAME guesses."
+  USERNAME_ESC=$(printf '%s' "$USERNAME" | sed "s/'/''/g")
 fi
 
 TRIES=0
 while true; do
   echo "Guess the secret number between 1 and 1000:"
   read -r GUESS
+  GUESS=$(printf '%s' "$GUESS" | tr -d '\r')
 
   if ! [[ "$GUESS" =~ ^-?[0-9]+$ ]]; then
     echo "That is not an integer, guess again:"
