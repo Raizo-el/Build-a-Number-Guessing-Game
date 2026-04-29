@@ -9,7 +9,7 @@ INPUT_NAME=$(printf '%s' "$INPUT_NAME" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[
 INPUT_NAME="${INPUT_NAME:0:22}"
 INPUT_ESC=$(printf '%s' "$INPUT_NAME" | sed "s/'/''/g")
 
-USER_DATA="$($PSQL "SELECT username, games_played, COALESCE(best_game::text, '0') FROM users WHERE username = '$INPUT_ESC';" 2>/dev/null)"
+USER_DATA="$($PSQL "SELECT username, games_played, COALESCE(best_game::text, '0') FROM users WHERE LOWER(username) = LOWER('$INPUT_ESC');" 2>/dev/null)"
 USER_DATA_TRIM=$(printf '%s' "$USER_DATA" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 
 if [[ -z "$USER_DATA_TRIM" ]]; then
