@@ -9,15 +9,15 @@ USERNAME="${USERNAME:0:22}"
 USERNAME_ESC="${USERNAME//\'/\'\'}"
 
 USER_DATA="$($PSQL "SELECT games_played, COALESCE(best_game::text, '0') FROM users WHERE username='$USERNAME_ESC';" 2>/dev/null)"
-USER_DATA_TRIM=$(echo "$USER_DATA" | xargs)
+USER_DATA_TRIM=$(echo "$USER_DATA" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 
 if [[ -z "$USER_DATA_TRIM" ]]; then
   echo "Welcome, $USERNAME! It looks like this is your first time here."
   $PSQL "INSERT INTO users(username, games_played, best_game) VALUES('$USERNAME_ESC', 0, NULL);" >/dev/null 2>&1
 else
   IFS='|' read -r GAMES_PLAYED BEST_GAME <<< "$USER_DATA_TRIM"
-  GAMES_PLAYED=$(echo "$GAMES_PLAYED" | xargs)
-  BEST_GAME=$(echo "$BEST_GAME" | xargs)
+  GAMES_PLAYED=$(echo "$GAMES_PLAYED" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+  BEST_GAME=$(echo "$BEST_GAME" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
   echo "Welcome back, $USERNAME! You have played $GAMES_PLAYED games, and your best game took $BEST_GAME guesses."
 fi
 
