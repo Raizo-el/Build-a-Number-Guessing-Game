@@ -27,7 +27,7 @@ while true; do
   echo "Guess the secret number between 1 and 1000:"
   read -r GUESS
 
-  if ! [[ "$GUESS" =~ ^-?[0-9]+$ ]] || ! (( GUESS >= 1 && GUESS <= 1000 )); then
+  if ! [[ "$GUESS" =~ ^-?[0-9]+$ ]]; then
     echo "That is not an integer, guess again:"
     continue
   fi
