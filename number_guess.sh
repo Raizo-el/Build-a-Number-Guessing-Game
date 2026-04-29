@@ -8,7 +8,7 @@ read -r USERNAME
 USERNAME="${USERNAME:0:22}"
 USERNAME_ESC="${USERNAME//\'/\'\'}"
 
-USER_DATA="$($PSQL "SELECT username, games_played, COALESCE(best_game::text, '0') FROM users WHERE username='$USERNAME_ESC';" 2>/dev/null)"
+USER_DATA="$($PSQL "SELECT username, games_played, COALESCE(best_game::text, '0') FROM users WHERE LOWER(username) = LOWER('$USERNAME_ESC');" 2>/dev/null)"
 USER_DATA_TRIM=$(echo "$USER_DATA" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 
 if [[ -z "$USER_DATA_TRIM" ]]; then
@@ -23,10 +23,11 @@ else
 fi
 
 TRIES=0
-echo "Guess the secret number between 1 and 1000:"
 while true; do
+  echo "Guess the secret number between 1 and 1000:"
   read -r GUESS
-  if ! [[ "$GUESS" =~ ^-?[0-9]+$ ]]; then
+
+  if ! [[ "$GUESS" =~ ^-?[0-9]+$ ]] || ! (( GUESS >= 1 && GUESS <= 1000 )); then
     echo "That is not an integer, guess again:"
     continue
   fi
@@ -39,7 +40,7 @@ while true; do
     echo "It's higher than that, guess again:"
   else
     echo "You guessed it in $TRIES tries. The secret number was $SECRET. Nice job!"
-    $PSQL "UPDATE users SET games_played = games_played + 1, best_game = CASE WHEN best_game IS NULL OR $TRIES < best_game THEN $TRIES ELSE best_game END WHERE username='$USERNAME_ESC';" >/dev/null 2>&1
+    $PSQL "UPDATE users SET games_played = games_played + 1, best_game = CASE WHEN best_game IS NULL OR $TRIES < best_game THEN $TRIES ELSE best_game END WHERE LOWER(username) = LOWER('$USERNAME_ESC');" >/dev/null 2>&1
     break
   fi
 done
