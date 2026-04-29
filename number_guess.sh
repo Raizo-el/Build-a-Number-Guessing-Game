@@ -1,4 +1,5 @@
 #!/bin/bash
+# Number guessing game - PostgreSQL user stats
 PSQL="psql --username=freecodecamp --dbname=number_guess -t --no-align -c"
 
 SECRET=$(( RANDOM % 1000 + 1 ))
@@ -6,9 +7,9 @@ SECRET=$(( RANDOM % 1000 + 1 ))
 echo "Enter your username:"
 read -r USERNAME
 USERNAME="${USERNAME:0:22}"
-USERNAME_ESC="${USERNAME//\'/\'\'}"
+USERNAME_ESC=$(printf '%s\n' "$USERNAME" | sed "s/'/''/g")
 
-USER_DATA="$($PSQL "SELECT username, games_played, COALESCE(best_game::text, '0') FROM users WHERE LOWER(username) = LOWER('$USERNAME_ESC');" 2>/dev/null)"
+USER_DATA="$($PSQL "SELECT username, games_played, COALESCE(best_game::text, '0') FROM users WHERE username='$USERNAME_ESC';" 2>/dev/null)"
 USER_DATA_TRIM=$(echo "$USER_DATA" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 
 if [[ -z "$USER_DATA_TRIM" ]]; then
@@ -40,7 +41,7 @@ while true; do
     echo "It's higher than that, guess again:"
   else
     echo "You guessed it in $TRIES tries. The secret number was $SECRET. Nice job!"
-    $PSQL "UPDATE users SET games_played = games_played + 1, best_game = CASE WHEN best_game IS NULL OR $TRIES < best_game THEN $TRIES ELSE best_game END WHERE LOWER(username) = LOWER('$USERNAME_ESC');" >/dev/null 2>&1
+    $PSQL "UPDATE users SET games_played = games_played + 1, best_game = CASE WHEN best_game IS NULL OR $TRIES < best_game THEN $TRIES ELSE best_game END WHERE username='$USERNAME_ESC';" >/dev/null 2>&1
     break
   fi
 done
