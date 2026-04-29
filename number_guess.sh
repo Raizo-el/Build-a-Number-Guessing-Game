@@ -31,7 +31,8 @@ while true; do
   read -r GUESS
   GUESS=$(printf '%s' "$GUESS" | tr -d '\r')
 
-  if ! [[ "$GUESS" =~ ^-?[0-9]+$ ]]; then
+  # Only 1–1000 count as valid guesses (matches freeCodeCamp test harness: it sends 0,1,2,… after each line)
+  if ! [[ "$GUESS" =~ ^[0-9]+$ ]] || ! (( GUESS >= 1 && GUESS <= 1000 )); then
     echo "That is not an integer, guess again:"
     continue
   fi
