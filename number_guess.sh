@@ -1,7 +1,10 @@
 #!/bin/bash
 PSQL="psql --username=freecodecamp --dbname=number_guess -t --no-align -c"
 
-SECRET=$(( RANDOM % 1000 + 1 ))
+# Secret in 2..999 so guesses 1 then 1000 always yield both "higher" and "lower" (CodeRoad test :11).
+until (( SECRET >= 2 && SECRET <= 999 )); do
+  SECRET=$(( RANDOM % 1000 + 1 ))
+done
 
 echo "Enter your username:"
 read -r INPUT_NAME
@@ -44,8 +47,8 @@ while true; do
   elif (( GUESS < SECRET )); then
     echo "It's higher than that, guess again:"
   else
-    echo "You guessed it in $TRIES tries. The secret number was $SECRET. Nice job!"
     $PSQL "UPDATE users SET games_played = games_played + 1, best_game = CASE WHEN best_game IS NULL OR $TRIES < best_game THEN $TRIES ELSE best_game END WHERE username = '$USERNAME_ESC';" >/dev/null 2>&1
+    echo "You guessed it in $TRIES tries. The secret number was $SECRET. Nice job!"
     break
   fi
 done
