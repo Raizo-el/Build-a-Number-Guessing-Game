@@ -1,25 +1,25 @@
 #!/bin/bash
-# Number guessing game - PostgreSQL user stats
 PSQL="psql --username=freecodecamp --dbname=number_guess -t --no-align -c"
 
 SECRET=$(( RANDOM % 1000 + 1 ))
 
 echo "Enter your username:"
 read -r USERNAME
+USERNAME=$(printf '%s' "$USERNAME" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 USERNAME="${USERNAME:0:22}"
-USERNAME_ESC=$(printf '%s\n' "$USERNAME" | sed "s/'/''/g")
+USERNAME_ESC=$(printf '%s' "$USERNAME" | sed "s/'/''/g")
 
-USER_DATA="$($PSQL "SELECT username, games_played, COALESCE(best_game::text, '0') FROM users WHERE username='$USERNAME_ESC';" 2>/dev/null)"
-USER_DATA_TRIM=$(echo "$USER_DATA" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+USER_DATA="$($PSQL "SELECT username, games_played, COALESCE(best_game::text, '0') FROM users WHERE username = '$USERNAME_ESC';" 2>/dev/null)"
+USER_DATA_TRIM=$(printf '%s' "$USER_DATA" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 
 if [[ -z "$USER_DATA_TRIM" ]]; then
   echo "Welcome, $USERNAME! It looks like this is your first time here."
   $PSQL "INSERT INTO users(username, games_played, best_game) VALUES('$USERNAME_ESC', 0, NULL);" >/dev/null 2>&1
 else
   IFS='|' read -r DB_USERNAME GAMES_PLAYED BEST_GAME <<< "$USER_DATA_TRIM"
-  DB_USERNAME=$(echo "$DB_USERNAME" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-  GAMES_PLAYED=$(echo "$GAMES_PLAYED" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-  BEST_GAME=$(echo "$BEST_GAME" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+  DB_USERNAME=$(printf '%s' "$DB_USERNAME" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+  GAMES_PLAYED=$(printf '%s' "$GAMES_PLAYED" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+  BEST_GAME=$(printf '%s' "$BEST_GAME" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
   echo "Welcome back, $DB_USERNAME! You have played $GAMES_PLAYED games, and your best game took $BEST_GAME guesses."
 fi
 
@@ -41,7 +41,7 @@ while true; do
     echo "It's higher than that, guess again:"
   else
     echo "You guessed it in $TRIES tries. The secret number was $SECRET. Nice job!"
-    $PSQL "UPDATE users SET games_played = games_played + 1, best_game = CASE WHEN best_game IS NULL OR $TRIES < best_game THEN $TRIES ELSE best_game END WHERE username='$USERNAME_ESC';" >/dev/null 2>&1
+    $PSQL "UPDATE users SET games_played = games_played + 1, best_game = CASE WHEN best_game IS NULL OR $TRIES < best_game THEN $TRIES ELSE best_game END WHERE username = '$USERNAME_ESC';" >/dev/null 2>&1
     break
   fi
 done
