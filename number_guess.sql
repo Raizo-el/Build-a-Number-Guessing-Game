@@ -1,6 +1,7 @@
 --
--- PostgreSQL database dump for number_guess (schema + table)
--- Rebuild: psql -U postgres < number_guess.sql
+-- PostgreSQL database dump for number_guess (schema + table).
+-- Rebuild from this file: psql -U postgres < number_guess.sql
+-- Course connection (interactive): psql --username=freecodecamp --dbname=postgres
 --
 
 DROP DATABASE IF EXISTS number_guess;
